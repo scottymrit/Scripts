@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+#
+
+if [ -f ~/.wca.env ]; then . ~/.wca.env; fi
+
+
+
+# only start a process if it's not already running.
+if $(ps uxwww | egrep "java.*--(match-merge|lco-detector)" | grep -v grep >/dev/null 2>&1) ; then
+   echo "match and merge already running";
+   ps uxwww | grep -e "--(load|match-merge|lco-detector)" | grep -v grep
+   exit 4
+fi
+
+nohup /wca/mandm/bin/mandm --match-merge --load --lco-detector --env=${WCA_ENV} -v 2>&1 > ~/mm.log &

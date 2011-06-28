@@ -1,0 +1,53 @@
+IF EXISTS(SELECT *
+            FROM sys.views
+           WHERE name = 'vwPayrollTotals' AND
+            schema_id = SCHEMA_ID('dbo'))
+DROP VIEW dbo.vwPayrollTotals;
+
+
+CREATE VIEW dbo.vwPayrollTotals AS 
+select prs.payrollDate, prs.locationuuid, prs.payrolluuid, prd.columnTypeUUID, tm.ColumnPosition, ct.CanonicalName, sum(prd.columnvalue) as TotalValue
+  from Payrolls as prs 
+ right outer join Employees as emps
+    on prs.PayrollUUID = emps.PayrollUUID
+ right outer join PayrollData as prd
+    on emps.employeeuuid = prd.employeeuuid
+ right outer join ColumnTypes ct
+    on prd.columnTypeUUID = ct.columnTypeUUID
+ right outer join TemplateMaps tm
+    on prd.columnTypeUUID = tm.ColumnTypeUUID
+ where prd.columnTypeUUID is not null
+   and ct.CanonicalName is not null
+   and prs.exportDate is not null
+   and tm.ColumnTypeUUID is not null
+ group by prs.payrollDate, prs.locationUUID, prs.payrolluuid, prd.columnTypeUUID, tm.ColumnPosition, ct.CanonicalName; 
+ 
+ 
+update Payrolls
+   set CompletedDate = '2010-07-27 00:00:00.0'
+ where payrolluuid in ('db079ac437ff4ec1893014b5bf168f78','db079ac437ff4ec1893014b5bf168f76');
+ 
+select *
+  from vwPayrollTotals
+ order by payrollDate desc;
+ 
+select pt.payrollDate, pt. 
+  from vwPayrollTotals pt
+ where pt.payrollDate > '2010-07-17 00:00:00.0' 
+   and columnTypeUUID in (select distinct columnTypeUUID 
+		                    from columnTypes ct 
+		                   where ct.IsCompensation = 1 
+		                      or ct.IsContribution = 1)
+   order by pt.payrollDate desc
+   
+   
+select pt.payRollDate, pt.payrolluuid, pt.CanonicalName, pt.totalValue
+  from vwPayrollTotals pt
+ where pt.PayrollDate > '2010-07-17 00:00:00.0' 
+   and pt.columnTypeUUID in (select distinct columnTypeUUID 
+		                       from columnTypes ct 
+		                      where ct.IsCompensation = 1 
+		                         or ct.IsContribution = 1) 
+   and pt.payrollUUID = 'db079ac437ff4ec1893014b5bf168f78' 
+ order by pt.PayrollDate desc		
+

@@ -1,0 +1,126 @@
+   						  
+select top 5 prs.payrolldate, prs.payrolluuid, emps.employeeuuid 
+  from Employees emps, 
+       payrolls prs
+ where emps.SocialSecurityNumber = '121-21-2121'
+   and emps.PayrollUUID = prs.PayrollUUID
+   and exportDate is not null
+ order by payrollDate desc;
+ 
+ 
+ 
+select *
+  from payrolls;
+
+select *
+  from Templates;  
+  
+select displayName, columnTypeUUID, columnValue
+  from PayrollData
+ where EmployeeUUID = 'f21192573fe84d9d9e11eadd7e318f1c'
+   and ColumnTypeUUID in ('421f4466332d4a93834b23f0eeea7e57', '21ac49bb467446fea45eef4b3fc62f8f', 'ec28b6b73e5a4153b271eb6a1699f31a');
+   
+  
+select emps.PayrollUUID, prd.ColumnTypeUUID, prd.displayName, sum(prd.columnValue)
+  from payrolldata prd, employees emps, payrolls prs
+ where prd.EmployeeUUID = emps.EmployeeUUID
+   and emps.PayrollUUID = prs.PayrollUUID
+   and prs.LocationUUID = '1bff783173174e4db67d3bc2dd5e40f9'
+   and payrollDate > '2009-08-02 00:00:00.0'
+   and columnTypeUUID in (select distinct columnTypeUUID
+  							from columnTypes ct
+ 						   where ct.IsCompensation = 1
+    						  or ct.IsContribution = 1)
+   group by prd.ColumnTypeUUID, emps.PayrollUUID, prd.DisplayName
+   order by emps.PayrollUUID; 
+   
+   
+select prs.payrolldate, sum(prd.columnValue)
+  from payrolldata prd, employees emps, payrolls prs
+ where prd.EmployeeUUID = emps.EmployeeUUID
+   and emps.PayrollUUID = prs.PayrollUUID
+   and prs.LocationUUID = '1bff783173174e4db67d3bc2dd5e40f9'
+   and payrollDate > '2009-08-02 00:00:00.0'
+   and columnTypeUUID in (select distinct columnTypeUUID
+  							from columnTypes ct
+ 						   where ct.IsCompensation = 1
+    						  or ct.IsContribution = 1)
+   group by prs.PayrollDate; 
+   
+select prs.payrolldate, prd.columnValue
+  from payrolldata prd, employees emps, payrolls prs
+ where prd.EmployeeUUID = emps.EmployeeUUID
+   and emps.PayrollUUID = prs.PayrollUUID
+   and prs.LocationUUID = '1bff783173174e4db67d3bc2dd5e40f9'
+   and payrollDate > '2009-08-02 00:00:00.0'
+   and columnTypeUUID in (select distinct columnTypeUUID
+  							from columnTypes ct
+ 						   where ct.IsCompensation = 1
+    						  or ct.IsContribution = 1);
+  
+select data.ColumnValue
+  from PayrollData data, Payrolls prs, Employees emps
+ where data.ColumnTypeUUID = '421f4466332d4a93834b23f0eeea7e57'
+   and prs.PayrollUUID = 'db079ac437ff4ec1893014b5bf168f77'
+   and emps.PayrollUUID = prs.PayrollUUID
+   and data.EmployeeUUID = emps.EmployeeUUID;
+  
+select *
+  from PayrollData where employeeuuid =(  
+select employeeuuid 
+  from employees where payrolluuid = 'db079ac437ff4ec1893014b5bf168f76');
+  
+select columnTypeUUID
+  from ColumnTypes
+ where IsCompensation = 1
+   or IsContribution = 1;
+  
+select * 
+  from Payrolls
+ where PayrollUUID = 'db079ac437ff4ec1893014b5bf168f76';
+ 
+select *
+  from payrolldata;
+
+select *
+  from planlocations
+ where PlanUUID = (
+select planuuid
+  from payrollplans
+ where externalplanid = 'CA1');
+ 
+
+
+ 
+select top 5 prs.PayrollUUID, emps.employeeuuid, payrollDate
+  from Employees emps, Payrolls prs
+ where emps.SocialSecurityNumber = '121-21-2121'
+   and emps.PayrollUUID = prs.PayrollUUID 
+   and prs.exportDate is not null
+ order by payrollDate desc;
+ 
+INSERT 
+  INTO EventTypes(EventTypeID, EventMessage, ColumnTypeUUID, IsError, IsWarning) 
+VALUES (N'ACTIVE_EMP_PARSE_ERROR', 'Parsing Employee Hire Date, Rehire Date, or Termination Date failed', null, 0, 1);
+
+INSERT 
+  INTO EventTypes(EventTypeID, EventMessage, ColumnTypeUUID, IsError, IsWarning) 
+VALUES (N'ACTIVE_EMP_NO_COMP', 'Employee is active but has recieved no compensation for at least the last 3 payrolls', null, 0, 1);
+
+INSERT 
+  INTO Actions(ActionUUID, ActionName, ActionClass, ActionType) 
+VALUES ('f749fab7c69c406bb2a47a8537e25372', N'No Pay Check', N'com.envisagesystems.util.fileprocessor.actor.validator.impl.ActiveEmployeeNoPayValidator', N'ROW');
+
+INSERT 
+  INTO ActionConfig(ActionConfigUUID, ActionUUID, ActionConfigType, DisplayName, ActionTaken, ColumnTypeUUID) 
+VALUES ('a0f228dd59844c69932a00faeac7efa7', 'f749fab7c69c406bb2a47a8537e25372', N'METHOD', N'No Pay Check', N'validateNoPay', null);
+
+INSERT 
+  INTO templateMaps(TemplateMapUUID, TemplateUUID, ColumnPosition, DisplayName, ColumnTypeUUID, IsPrimary, TargetPosition, IsRoth, ColumnLength) 
+VALUES ('eb9540fca75c4a93aa389e876cca37c7', '42a07d359b6f48f1964216e63af94d4b', 19, 'Rehire Date', 'a12a060f5b504d27a8bbb19bfc5185fc', 0, 0, 0, 0);
+
+select *
+  from TemplateMaps where templateuuid = '42a07d359b6f48f1964216e63af94d4b' order by ColumnPosition;
+  
+select * from columnTypes where columnTypeuuid = (
+select columnTypeuuid from templateMaps where templateMapuuid = 'eb9540fca75c4a93aa389e876cca37c7');

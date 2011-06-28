@@ -1,0 +1,7 @@
+#!/bin/sh
+ssh -L 5000:eis-scottm.envisagesystems.com:3389 \
+    -L 1622:scm.envisagesystems.com:4001 \
+    -L 1522:eisora2.envisagesystems.com:1522 \
+    -L 9080:eis-scottm.envisagesystems.com:9080 \
+    -L 9043:eis-scottm.envisagesystems.com:9043 \
+    smathews@sentinel.envisagesystems.com -N

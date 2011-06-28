@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# A wrapper script for match and merge.
+#
+#set -x
+
+cygwin=false
+case "`uname`" in
+CYGWIN*) cygwin=true;;
+esac
+
+#move to the directory of this script for the duration of the script
+pushd `dirname $0`/..
+
+echo $PWD
+SEPARATOR=":"
+
+if $cygwin; then
+  JAVA_HOME=`cygpath --absolute --mixed "$JAVA_HOME"`
+  SEPARATOR=";"
+fi
+
+if [ ! -d "./lib" ]; then 
+  echo "ERROR: failed to find the lib directory."
+  exit 1
+fi
+
+MANDM_CLASSPATH="./conf${SEPARATOR}"
+for i in `ls ./lib/*.jar`; do
+    MANDM_CLASSPATH="${MANDM_CLASSPATH}${SEPARATOR}$i"
+done
+
+
+echo ""
+
+exec "${JAVA_HOME}/bin/java" -server ${JAVA_OPTS} -classpath "${MANDM_CLASSPATH}" -Xss128k -XX:+HeapDumpOnOutOfMemoryError  -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:HeapDumpPath=logs -Dcom.sun.management.config.file=conf/jmx.properties -Dlog4j.configuration=log4j.properties -Dlog.dir=logs/$(hostname) com.thomsonreuters.wca.Main $@
+
+#return to original directory
+popd
+
+

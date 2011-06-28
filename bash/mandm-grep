@@ -1,0 +1,7 @@
+. /wca/.cluster_hosts
+
+for host in $hosts
+do
+echo $host
+ssh $host grep $1 mm.log
+done

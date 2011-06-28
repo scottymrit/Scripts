@@ -1,0 +1,93 @@
+#!/bin/bash
+#
+#
+set -x
+
+if [ -f ~/.wca.env ]; then . ~/.wca.env; fi
+
+SHORTOPTS="s:dqvx"
+LONGOPTS="help,version,stop,start"
+
+if $(getopt -T >/dev/null 2>&1) ; [ $? = 4 ] ; then # New longopts getopt.
+    OPTS=$(getopt -o $SHORTOPTS --long $LONGOPTS -n "$progname" -- "$@")
+else # Old classic getopt.
+    # Special handling for --help and --version on old getopt.
+    case $1 in --help) print_help ; exit 0 ;; esac
+    case $1 in --version) print_version ; exit 0 ;; esac
+    OPTS=$(getopt $SHORTOPTS "$@")
+fi
+
+if [ $? -ne 0 ]; then
+    echo "'$progname --help' for more information" 1>&2
+    exit 1
+fi
+
+operation="unknown"
+
+eval set -- "$OPTS"
+
+while [ $# -gt 0 ]; do
+    echo $1 
+    case $1 in
+        --help)
+            print_help
+            exit 0
+            ;;
+        --version)
+            print_version
+            exit 0
+            ;;
+        --start)
+            operation="start"
+            shift
+            ;;
+        --stop)
+            operation="stop"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Internal Error: option processing error: $1" 1>&2
+            exit 1
+            ;;
+    esac
+done
+
+
+echo $operation
+
+#set the array "hosts"
+. /wca/.cluster_hosts
+
+
+case "$operation" in 
+    "stop")
+        echo stopping cluster
+        for host in ${hosts[@]}; do
+            echo $host
+            ssh wca@${host} /wca/mandm/bin/mandm-stop
+        done
+        
+        exit 0
+        ;;
+    "start")
+        echo starting cluster
+
+        for host in ${hosts[@]}; do
+            echo $host
+            ssh wca@${host} ". ~/.profile && /wca/mandm/bin/mandm-start 2>&1 > /dev/null"
+        done
+
+        exit 0
+        ;;
+    *)
+        echo "Error: unkown operation $operation" 1>&2
+        exit 1
+        ;;
+esac
+fi
+
+

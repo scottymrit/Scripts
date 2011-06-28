@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+#
+
+for p in `ps uxwww  | egrep "java.*(--load|--lco-detector|--match-merge)" | grep -v grep  | awk '{print \$2}' `; do kill $p; done
